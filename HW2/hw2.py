@@ -13,7 +13,7 @@
 # ВАШ КОД:
 import json
 
-with open("pilot_path.json", "r") as fp:
+with open("../data/pilot_path.json", "r") as fp:
     file_data = json.load(fp)
 
 # =====================================
@@ -107,7 +107,7 @@ def count_missions_by_drone(json_data):
     return drones_missions
 
 
-file_data = read_json_file("pilot_path.json")
+file_data = read_json_file("../data/pilot_path.json")
 print(
     f"Пилоты в порядке убывания количества миссий: {sorted_count_missions_by_pilots(file_data)}"
 )
