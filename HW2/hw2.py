@@ -11,7 +11,10 @@
 #  Прочитайте данные из файла pilot_path.json (лекция 9)
 
 # ВАШ КОД:
-...
+import json
+
+with open("pilot_path.json", "r") as fp:
+    file_data = json.load(fp)
 
 # =====================================
 # ЗАДАНИЕ 2: Расчет статистик
@@ -26,11 +29,10 @@
 # Пилоты в порядке убывания количества миссий: {'pilot1': 1, 'pilot4': 2, 'pilot9': 3, 'pilot5': 3, 'pilot7': 4, 'pilot6': 5, 'pilot2': 5, 'pilot3': 6, 'pilot8': 6}
 
 # ВАШ КОД:
-...
-
-# подсказка: готовый код нужной вам сортировки есть здесь (Sample Solution-1:): https://www.w3resource.com/python-exercises/dictionary/python-data-type-dictionary-exercise-1.php
-# подумайте, что нужно в нем изменить для правильной сортировки
-print(f"Пилоты в порядке убывания количества миссий: {dict(sorted(pilot_mission_dict.items(), key=lambda item: item[1], reverse=True))}")
+count_missions_by_pilots = {k: len(v["missions"]) for k, v in file_data.items()}
+print(
+    f"Пилоты в порядке убывания количества миссий: {dict(sorted(count_missions_by_pilots.items(), key=lambda item: item[1]))}"
+)
 
 # TODO 2-2) Получите и выведите список всех моделей дронов, которые были в файле pilot_path.json
 # Подсказка: внутри print используйте str.join(), чтобы соединить элементы списка (множества)
@@ -39,9 +41,13 @@ print(f"Пилоты в порядке убывания количества м�
 # Полеты совершались на дронах следующих моделей: DJI Mavic 2 Pro, DJI Mavic 3, DJI Inspire 2, DJI Mavic 2 Zoom, DJI Mavic 2 Enterprise Advanced
 
 # ВАШ КОД:
-...
+drones = set()
+for _, missions in file_data.items():
+    for mission in missions["missions"]:
+        drones.add(mission["drone"])
+
 # вывод результата (допишите код)
-print(f'Полеты совершались на дронах следующих моделей: {", ".join(...)}')
+print(f'Полеты совершались на дронах следующих моделей: {", ".join(drones)}')
 
 # TODO 2-3) Получите список миссий для каждой модели дронов, которые были в файле pilot_path.json,
 # и выведите на экран модель дрона и количество миссий, которые он отлетал
@@ -54,10 +60,59 @@ print(f'Полеты совершались на дронах следующих
 # Дрон DJI Mavic 2 Zoom отлетал 9 миссий
 
 # ВАШ КОД:
-...
+drones_missions = dict()
+for _, missions in file_data.items():
+    for mission in missions["missions"]:
+        drone = mission["drone"]
+        drones_missions[drone] = (
+            drones_missions[drone] + 1 if drones_missions.get(drone) is not None else 1
+        )
 # вывод результата (допишите код)
-print(f'Дрон {...} отлетал {...} миссий')
+for drone, count in drones_missions.items():
+    print(f"Дрон {drone} отлетал {count} миссий")
 
 # TODO 3) Оформите задания из TODO 1 и 2 в виде функций
 # ВАШ КОД:
-...
+
+
+def read_json_file(filename):
+    with open(filename, "r") as fp:
+        file_data = json.load(fp)
+    return file_data
+
+
+def sorted_count_missions_by_pilots(json_data):
+    count_missions_by_pilots = {k: len(v["missions"]) for k, v in json_data.items()}
+    return dict(sorted(count_missions_by_pilots.items(), key=lambda item: item[1]))
+
+
+def get_drones_list(json_data):
+    drones = set()
+    for _, missions in json_data.items():
+        for mission in missions["missions"]:
+            drones.add(mission["drone"])
+    return list(drones)
+
+
+def count_missions_by_drone(json_data):
+    drones_missions = dict()
+    for _, missions in file_data.items():
+        for mission in missions["missions"]:
+            drone = mission["drone"]
+            drones_missions[drone] = (
+                drones_missions[drone] + 1
+                if drones_missions.get(drone) is not None
+                else 1
+            )
+    return drones_missions
+
+
+file_data = read_json_file("pilot_path.json")
+print(
+    f"Пилоты в порядке убывания количества миссий: {sorted_count_missions_by_pilots(file_data)}"
+)
+print(
+    f'Полеты совершались на дронах следующих моделей: {", ".join(get_drones_list(file_data))}'
+)
+for drone, count in count_missions_by_drone(file_data).items():
+    print(f"Дрон {drone} отлетал {count} миссий")
