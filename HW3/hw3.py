@@ -1,3 +1,4 @@
+import json
 # В ЭТОМ ДЗ ВЫ БУДЕТЕ АНАЛИЗИРОВАТЬ ДАННЫЕ ОБ АВИАПРОИСШЕСТВИЯХ С УЧАСТИЕМ МОДЕЛЕЙ ДРОНОВ ИЗ ВАШИХ ИСХОДНЫХ ДАННЫХ В .JSON
 
 # =====================================
@@ -11,32 +12,42 @@
 
 # ВАШ КОД (дополните то, что нужно в классах):
 class Aircraft:
-	def __init__(self, weight):
-		self._weight = weight
+    def __init__(self, weight):
+        self._weight = weight
 
 class UAV:
-	def __init__(self):
-		self._has_autopilot = True
-		...
+    def __init__(self):
+        self._has_autopilot = True
+        self._missions = []
 
-	# напишите код для декоратора атрибута _missions
-	...
+    # напишите код для декоратора атрибута _missions
+    @property
+    def missions(self):
+        return self._missions
+    
+    @missions.setter
+    def missions(self, value):
+        self._missions = value
 
-	# напишите публичный метод count_missions
-	...
+    # напишите публичный метод count_missions
+    def count_missions(self):
+        return len(self._missions)
 
 class MultirotorUAV(Aircraft, UAV):
-	def __init__(self, weight, model, brand):
-		super().__init__(weight)
-		UAV.__init__(self)
-		self.__weight = weight
-		...
+    def __init__(self, weight, model, brand):
+        super().__init__(weight)
+        UAV.__init__(self)
+        self.__weight = weight
+        self._model = model
+        self._brand = brand
 
-	# напишите публичный метод get_info
-	...
+    # напишите публичный метод get_info
+    def get_info(self):
+        return {"weight":self.__weight, "brand": self._brand, "count_missions": self.count_missions()}
 
-	# напишите публичный метод get_model
-	...
+    # напишите публичный метод get_model
+    def get_model(self):
+        return self._model
 
 # =====================================
 # ЗАДАНИЕ 2: Работа с экземплярами классов
@@ -49,15 +60,32 @@ class MultirotorUAV(Aircraft, UAV):
 
 # каталог дронов уже готов для вас:
 drone_catalog = {
-	"DJI Mavic 2 Pro": {"weight":903, "brand":"DJI"},
-	"DJI Mavic 2 Zoom": {"weight":900, "brand":"DJI"},
-	"DJI Mavic 2 Enterprise Advanced": {"weight":920, "brand":"DJI"},
-	"DJI Inspire 2": {"weight":1500, "brand":"DJI"},
-	"DJI Mavic 3": {"weight":1000, "brand":"DJI"}
+    "DJI Mavic 2 Pro": {"weight":903, "brand":"DJI"},
+    "DJI Mavic 2 Zoom": {"weight":900, "brand":"DJI"},
+    "DJI Mavic 2 Enterprise Advanced": {"weight":920, "brand":"DJI"},
+    "DJI Inspire 2": {"weight":1500, "brand":"DJI"},
+    "DJI Mavic 3": {"weight":1000, "brand":"DJI"}
 }
 
 # ВАШ КОД:
-...
+with open("../data/pilot_path.json", "r") as fp:
+    file_data = json.load(fp)
+    
+drones_missions = dict()
+for _, missions in file_data.items():
+    for mission in missions["missions"]:
+        drone = mission["drone"]
+        if drones_missions.get(drone) is None:
+            drones_missions[drone] = [mission["mission"]]
+        else:
+            drones_missions[drone].append(mission["mission"])
+
+multirotoruavs = []
+for model, data in drone_catalog.items():
+    multirotoruav = MultirotorUAV(model=model, **data)
+    multirotoruav.missions = drones_missions[model]
+    multirotoruavs.append(multirotoruav)
+
 
 # TODO 2-4
 # Напишите код, который выводит информацию по заданной модели дрона. Состав информации: масса, производитель, количество отлетанных миссий
@@ -70,7 +98,11 @@ drone_catalog = {
 
 # ВАШ КОД:
 user_unput = input("Введите модель дрона (полностью) в любом регистре\n")
-...
+for multirotoruav in multirotoruavs:
+    model = multirotoruav.get_model()
+    if model.lower() == user_unput.lower():
+        info = multirotoruav.get_info()
+        print(f"Информация о дроне {model}: масса {info['weight']}, производитель {info['brand']}, количество миссий {info['count_missions']}")
 
 # =====================================
 # ЗАДАНИЕ 3: Классы - декораторы
@@ -80,27 +112,27 @@ user_unput = input("Введите модель дрона (полностью) 
 # Не забудьте, что атрибут добавляется при помощи декоратора
 
 class Aircraft:
-	...
+    ...
 
 class UAV:
-	...
+    ...
 
 class MultirotorUAV(Aircraft, UAV):
-	def __init__(self, weight, model, brand):
-		...
-		# добавьте приватный атрибут incidents
-		...
+    def __init__(self, weight, model, brand):
+        ...
+        # добавьте приватный атрибут incidents
+        ...
 
-	...
+    ...
 
-	# напишите код декоратора для атрибута incidents. Не забудьте сначала добавить приватный атрибут в класс
-	...
+    # напишите код декоратора для атрибута incidents. Не забудьте сначала добавить приватный атрибут в класс
+    ...
 
-	# напишите публичный метод add_incident, который добавляет инцидент в список инцидентов для данной модели дрона
-	...
+    # напишите публичный метод add_incident, который добавляет инцидент в список инцидентов для данной модели дрона
+    ...
 
-	# напишите публичный метод save_data, который сохраняет информацию о дроне в файл json
-	...
+    # напишите публичный метод save_data, который сохраняет информацию о дроне в файл json
+    ...
 
 
 # прочий код, необходимый для решения этого ДЗ (чтение данных о пилотах, сбор информации о дронах и пр.):
@@ -123,7 +155,7 @@ class MultirotorUAV(Aircraft, UAV):
 # Подсказка: вот так вы получаете названия модели для каждого экземпляра класса MultirotorUAV
 # Экземпляры все так же находятся в списке (например, drones_cls_list)
 for drone_cls in drones_cls_list:
-	drone = drone_cls.get_model()
+    drone = drone_cls.get_model()
 
 # TODO 4-2 - Добавьте в класс MultirotorUAV публичный метод save_data, который сохраняет статистику по дрону в файл
 # Внимание! Метод save_data не принимает параметры. Название файла сформируйте как: название класса + название модели + расширение .json
