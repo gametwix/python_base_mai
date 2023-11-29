@@ -40,6 +40,7 @@ class MultirotorUAV(Aircraft, UAV):
         self.__weight = weight
         self._model = model
         self._brand = brand
+        self._incidents = []
 
     # напишите публичный метод get_info
     def get_info(self):
@@ -48,6 +49,15 @@ class MultirotorUAV(Aircraft, UAV):
     # напишите публичный метод get_model
     def get_model(self):
         return self._model
+    
+    # напишите код декоратора для атрибута incidents. Не забудьте сначала добавить приватный атрибут в класс
+    @property
+    def incidents(self):
+        return self._incidents
+
+    # напишите публичный метод add_incident, который добавляет инцидент в список инцидентов для данной модели дрона
+    def add_incident(self, incident):
+        self._incident.append(incident)
 
 # =====================================
 # ЗАДАНИЕ 2: Работа с экземплярами классов
@@ -119,17 +129,23 @@ class UAV:
 
 class MultirotorUAV(Aircraft, UAV):
     def __init__(self, weight, model, brand):
-        ...
-        # добавьте приватный атрибут incidents
-        ...
+        super().__init__(weight)
+        UAV.__init__(self)
+        self.__weight = weight
+        self._model = model
+        self._brand = brand
+        self._incidents = []
 
     ...
 
     # напишите код декоратора для атрибута incidents. Не забудьте сначала добавить приватный атрибут в класс
-    ...
+    @property
+    def incidents(self):
+        return self._incidents
 
     # напишите публичный метод add_incident, который добавляет инцидент в список инцидентов для данной модели дрона
-    ...
+    def add_incident(self, incident):
+        self._incident.append(incident)
 
     # напишите публичный метод save_data, который сохраняет информацию о дроне в файл json
     ...
@@ -151,7 +167,7 @@ class MultirotorUAV(Aircraft, UAV):
 # ЗАДАНИЕ 4: Классы - методы классов
 # =====================================
 # TODO 4-1 - Для каждой модели дрона добавьте в экземпляр класса информацию об авиапроисшествиях, в которых участвовала эта модель
-# Информацию сохраните в атрибут incidents (используйте декораторы)
+# И  ts (используйте декораторы)
 # Подсказка: вот так вы получаете названия модели для каждого экземпляра класса MultirotorUAV
 # Экземпляры все так же находятся в списке (например, drones_cls_list)
 for drone_cls in drones_cls_list:
