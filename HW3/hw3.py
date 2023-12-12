@@ -1,4 +1,6 @@
 import json
+import re
+import csv
 # В ЭТОМ ДЗ ВЫ БУДЕТЕ АНАЛИЗИРОВАТЬ ДАННЫЕ ОБ АВИАПРОИСШЕСТВИЯХ С УЧАСТИЕМ МОДЕЛЕЙ ДРОНОВ ИЗ ВАШИХ ИСХОДНЫХ ДАННЫХ В .JSON
 
 # =====================================
@@ -38,26 +40,38 @@ class MultirotorUAV(Aircraft, UAV):
         super().__init__(weight)
         UAV.__init__(self)
         self.__weight = weight
-        self._model = model
-        self._brand = brand
-        self._incidents = []
+        self.__model = model
+        self.__brand = brand
+        self.__incidents = []
 
     # напишите публичный метод get_info
     def get_info(self):
-        return {"weight":self.__weight, "brand": self._brand, "count_missions": self.count_missions()}
+        return {"weight":self.__weight, "brand": self.__brand, "count_missions": self.count_missions()}
 
     # напишите публичный метод get_model
     def get_model(self):
-        return self._model
+        return self.__model
     
     # напишите код декоратора для атрибута incidents. Не забудьте сначала добавить приватный атрибут в класс
     @property
     def incidents(self):
-        return self._incidents
+        return self.__incidents
 
     # напишите публичный метод add_incident, который добавляет инцидент в список инцидентов для данной модели дрона
     def add_incident(self, incident):
-        self._incident.append(incident)
+        self.__incidents.append(incident)
+        
+    def save_data(self):
+        data = {
+            "model": self.get_model(),
+            "weight": self.get_info()['weight'],
+            "manufacturer": self.get_info()['brand'],
+            "missions": self.missions,
+            "incidents": self.incidents
+        }
+        with open(f"{self.__class__.__name__}_{self.__model}.json", 'w') as file:
+            json.dump(data, file, indent=4)
+        
 
 # =====================================
 # ЗАДАНИЕ 2: Работа с экземплярами классов
@@ -107,10 +121,10 @@ for model, data in drone_catalog.items():
 # Информация о дроне DJI Mavic 2 Pro: масса 903, производитель DJI, количество миссий 6
 
 # ВАШ КОД:
-user_unput = input("Введите модель дрона (полностью) в любом регистре\n")
+user_input = input("Введите модель дрона (полностью) в любом регистре\n")
 for multirotoruav in multirotoruavs:
     model = multirotoruav.get_model()
-    if model.lower() == user_unput.lower():
+    if model.lower() == user_input.lower():
         info = multirotoruav.get_info()
         print(f"Информация о дроне {model}: масса {info['weight']}, производитель {info['brand']}, количество миссий {info['count_missions']}")
 
@@ -121,57 +135,18 @@ for multirotoruav in multirotoruavs:
 # Добавьте в класс MultirotorUAV атрибут incidents и внесите туда информацию обо всех найденных происшествиях для этой модели
 # Не забудьте, что атрибут добавляется при помощи декоратора
 
-class Aircraft:
-    ...
 
-class UAV:
-    ...
+with open ("../data/faa_incidents.csv") as filename_csv:
+    incidents_csv = csv.reader(filename_csv)
+    for row in incidents_csv:
+        column_split = str(row).split("', ")
+        for drone in multirotoruavs:
+            drone_name = drone.get_model().replace("DJI ","")
+            for cell in column_split:
+                incident = re.search(drone_name, cell, re.I)
+                if incident is not None:
+                    drone.add_incident(incident.string)
 
-class MultirotorUAV(Aircraft, UAV):
-    def __init__(self, weight, model, brand):
-        super().__init__(weight)
-        UAV.__init__(self)
-        self.__weight = weight
-        self._model = model
-        self._brand = brand
-        self._incidents = []
-
-    ...
-
-    # напишите код декоратора для атрибута incidents. Не забудьте сначала добавить приватный атрибут в класс
-    @property
-    def incidents(self):
-        return self._incidents
-
-    # напишите публичный метод add_incident, который добавляет инцидент в список инцидентов для данной модели дрона
-    def add_incident(self, incident):
-        self._incident.append(incident)
-
-    # напишите публичный метод save_data, который сохраняет информацию о дроне в файл json
-    ...
-
-
-# прочий код, необходимый для решения этого ДЗ (чтение данных о пилотах, сбор информации о дронах и пр.):
-...
-
-# =====================================
-# ЗАДАНИЕ 4: Файлы - CSV
-# =====================================
-# TODO 4-1 - Загрузите информацию об авиапроисшествиях из файла csv
-# Проверьте по моделям (названия моделей возьмите из экземпляров класса MultirotorUAV), какие из них участвовали в авиапроисшествиях
-
-# ВАШ КОД чтения данных из файла:
-...
-
-# =====================================
-# ЗАДАНИЕ 4: Классы - методы классов
-# =====================================
-# TODO 4-1 - Для каждой модели дрона добавьте в экземпляр класса информацию об авиапроисшествиях, в которых участвовала эта модель
-# И  ts (используйте декораторы)
-# Подсказка: вот так вы получаете названия модели для каждого экземпляра класса MultirotorUAV
-# Экземпляры все так же находятся в списке (например, drones_cls_list)
-for drone_cls in drones_cls_list:
-    drone = drone_cls.get_model()
 
 # TODO 4-2 - Добавьте в класс MultirotorUAV публичный метод save_data, который сохраняет статистику по дрону в файл
 # Внимание! Метод save_data не принимает параметры. Название файла сформируйте как: название класса + название модели + расширение .json
@@ -181,7 +156,6 @@ for drone_cls in drones_cls_list:
 # например: {"model":"DJI Inspire 2", "weight": 1500, "info": "...", "manufacturer": "DJI", "missions": [], "incidents": []}
 
 # ВАШ КОД - допишите код в объявлении класса
-...
 
 # =====================================
 # ЗАДАНИЕ 5: Регулярные выражения
@@ -216,11 +190,18 @@ for drone_cls in drones_cls_list:
 # AIRCRAFT IS A DJI T650A INSPIRE 2 SUAS, SERIAL # 0A0LG2J107005, REGISTRATION # FA3FTYCLFE. FREQUENCY USED IS UNKNOWN. THE AIRCRAFT HAS TWO FREQUENCIES AVAILABLE, 2.4 AND 5.8 GHZ, BUT THE PIC DOESN'T REMEMBER WHICH ONE WAS IN USE DURING THE FLIGHT. PIC IS ^PRIVACY DATA OMITTED^, CERTIFICATE ^PRIVACY DATA OMITTED^. ^PRIVACY DATA OMITTED^ SAID THAT THE UAS EXPERIENCED AN ERROR ON ITS FIRST CALIBRATION ATTEMPT PRIOR TO LAUNCH BUT CALIBRATED CORRECTLY ON THE SECOND ATTEMPT AND THE FLIGHT CONTINUED AFTER RECORDING THE HOME POINT AT THE LAUNCH POSITION. HE SAID THE UAS WAS IN POSITIONING MODE (P-MODE) FOR THE ENTIRE FLIGHT. THE LANDING SEQUENCE WAS INITIATED MANUALLY (I.E. THE AUTOLAND FEATURE WAS NOT USED). ^PRIVACY DATA OMITTED^ SAID THAT THE UAS "TOOK OFF" WHEN IT GOT DOWN TO ABOUT 5' AGL AND FLEW INSIDE THE CPD HANGAR WHERE IT STRUCK A CPD HELICOPTER. HE SAID THAT THE UAS ACTED AS IF IT WAS "PRE-PROGRAMMED" TO FLY INTO THE HANGAR ONCE IT GOT AWAY FROM HIM.
 
 # ВАШ КОД:
-...
+for multirotoruav in multirotoruavs:
+    print(f"{multirotoruav.get_model()} инцидентов - {len(multirotoruav.incidents)}")
+    for i, incident in enumerate(multirotoruav.incidents):
+        model = multirotoruav.get_model().replace('DJI ', '')
+        short_inc = ' '.join(re.findall(f"[A-Z][^.!?]*(?:{model})[^.!?]*[.!?]", incident, flags=re.I))
+        print(i, '-', short_inc)
+        print(incident)
 
 # TODO 5-2 - После вывода информации об инциденте сохраните всю информацию о дроне в файл .json при помощи метода save_data() класса
 # ВАШ КОД:
-...
+for multirotoruav in multirotoruavs:
+    multirotoruav.save_data()
 
 # РЕЗУЛЬТАТ:
 # см. приложенные файлы в папке samples
